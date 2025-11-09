@@ -1,216 +1,138 @@
-Retrieval-Augmented-Generation (RAG) Chatbot
+# ✅ YouTube Transcript RAG — README + Architecture Diagram + Flowchart
 
-A minimal, end-to-end RAG pipeline using LangChain that:
+A clean, professional, copy-ready document containing only:
 
-pulls a YouTube transcript,
+* ✅ Full README
+* ✅ Architecture Diagram (Mermaid)
+* ✅ Flowchart (Mermaid)
 
-splits it into chunks,
+---
 
-builds a FAISS vector store with OpenAI embeddings, and
+# 📘 **README — YouTube Transcript RAG (LangChain + FAISS + OpenAI)**
 
-answers questions by retrieving relevant chunks and generating a response with an LLM.
+## 📌 **Overview**
 
-Main notebook: Rag_using_langchain.ipynb
+This project builds a **Retrieval-Augmented Generation (RAG)** pipeline that answers questions *strictly* using the transcript of any YouTube video. It retrieves the transcript, chunks it, embeds using OpenAI embeddings, indexes with FAISS, retrieves relevant chunks, and generates grounded answers with ChatOpenAI.
 
-✨ Features
+---
 
-Document ingestion from YouTube transcripts
+## 🚀 **Features**
 
-Robust text splitting (overlap to preserve context)
+✅ Fetch YouTube transcript automatically
+✅ Smart text chunking with overlap
+✅ Fast vector search using FAISS
+✅ Strict grounding (LLM answers only from transcript context)
+✅ No hallucination — model says *"I don't know"* if context missing
+✅ Clean and modular LangChain pipeline using runnables
 
-FAISS vector index for fast similarity search
+---
 
-OpenAI embeddings + chat model via LangChain
+## 🧩 **Tech Stack**
 
-Clean RAG prompt that refuses when context is insufficient
+* **LangChain** (runnables, retriever, prompt templates)
+* **OpenAI** (embeddings + chat model)
+* **FAISS CPU** (vector index)
+* **YouTube Transcript API**
+* **Python-dotenv**
 
-📁 Project Structure
-Retrieval-Augmented-Generation-chatbot/
-├── Rag_using_langchain.ipynb     # Complete, runnable notebook
-├── README.md                     # This file
-└── requirements.txt              # (recommended) see below
+---
 
+## 🔧 **Installation**
 
-Tip: add a .gitignore and do not commit any API keys.
+```bash
+pip install -q youtube-transcript-api langchain-community langchain-openai faiss-cpu tiktoken python-dotenv
+```
 
-🧰 Requirements
+---
 
-Python 3.9+
+## 🔐 **Environment Setup**
 
-A terminal with pip
+Create a `.env` file:
 
-An OpenAI API key
+```
+OPENAI_API_KEY=your_openai_api_key_here
+```
 
-Create a virtual environment (recommended):
+Then load it:
 
-python -m venv .venv
-# Linux/Mac:
-source .venv/bin/activate
-# Windows (PowerShell):
-.venv\Scripts\Activate.ps1
+```python
+from dotenv import load_dotenv
+load_dotenv()
+```
 
+---
 
-Install dependencies:
+## 🧠 **RAG Pipeline Steps**
 
-pip install -q youtube-transcript-api langchain-community langchain-openai \
-               faiss-cpu tiktoken python-dotenv jupyter
+1. **Fetch transcript** using `YouTubeTranscriptApi`.
+2. **Flatten** transcript text.
+3. **Split** text into overlapping chunks.
+4. **Embed chunks** using OpenAI embeddings.
+5. **Index embeddings** in FAISS.
+6. **Retrieve** relevant chunks for a user question.
+7. **Inject** {context} + {question} into PromptTemplate.
+8. **Generate grounded answer** using ChatOpenAI.
+9. **Parse output** into clean string.
 
+---
 
-Optional: save them to a file:
+# 🏗️ **Architecture Diagram**
 
-pip freeze > requirements.txt
+```mermaid
+flowchart LR
+  A[YouTube Video ID] --> B[YouTubeTranscriptApi]
+  B -->|Transcript Chunks| C[Flatten Transcript]
+  C --> D[Recursive Text Splitter]
+  D -->|Chunked Docs| E[OpenAI Embeddings]
+  E -->|Vectors| F[FAISS Vector Index]
 
-🔐 Configure API Key (safe way)
+  G[User Question] --> H[Retriever (FAISS Similarity Search)]
+  F --> H
 
-Create a file named .env in the project root:
+  H --> I[format_docs() → Combined Context]
+  I --> J[PromptTemplate]
+  G --> J
 
-OPENAI_API_KEY=your_key_here
+  J --> K[ChatOpenAI]
+  K --> L[StrOutputParser]
+  L --> M[Final Answer]
+```
 
+---
 
-Load it inside the notebook:
+# 🔄 **Flowchart (End-to-End Workflow)**
 
-from dotenv import load_dotenv; load_dotenv()
+```mermaid
+flowchart TD
+  Q[User Question] --> P1[parallel_chain]
 
+  P1 -->|retriever| CT[Retrieve Top-k Transcript Chunks]
+  CT --> FD[format_docs → Context Text]
 
-Security: Never hard-code or commit your API key to GitHub.
+  P1 -->|Passthrough| QQ[Original Question]
 
-🚀 How to Run
+  FD --> PT[PromptTemplate]
+  QQ --> PT
 
-Launch Jupyter and open the notebook:
+  PT --> LLM[ChatOpenAI]
+  LLM --> PARSE[StrOutputParser]
+  PARSE --> OUT[Final Answer Returned]
+```
 
-jupyter notebook Rag_using_langchain.ipynb
+---
 
+# ✅ **Ready to Use**
 
-In the notebook, follow the cells in order. The pipeline has four clear stages:
+This document is now ready for:
 
-1) Indexing — Document Ingestion
+* ✅ GitHub README
+* ✅ Viva / Internship Presentation
+* ✅ Project submission
+* ✅ Portfolio showcase
 
-Fetch the YouTube transcript for a given video ID:
+Agar chaho to isme:
+✅ Full code section bhi add kar doon,
+✅ Diagrams ko PNG me export kar doon,
+✅ Dark theme version bana doon.
 
-from youtube_transcript_api import YouTubeTranscriptApi, TranscriptsDisabled
-
-video_id = "Gfr50f6ZBvo"  # only the ID, not the full URL
-
-def fetch_transcript(video_id, languages=["en"]):
-    try:
-        # Fast path (works in most versions)
-        return YouTubeTranscriptApi.get_transcript(video_id, languages=languages)
-    except AttributeError:
-        # Fallback for environments where get_transcript is unavailable
-        transcripts = YouTubeTranscriptApi.list_transcripts(video_id)
-        transcript = transcripts.find_transcript(languages).fetch()
-        return transcript
-
-try:
-    transcript_list = fetch_transcript(video_id, languages=["en"])
-    transcript_text = " ".join(chunk["text"] for chunk in transcript_list)
-except TranscriptsDisabled:
-    transcript_text = ""
-    print("No captions available for this video.")
-
-2) Indexing — Text Splitting
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-
-splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-docs = splitter.create_documents([transcript_text])
-
-3) Indexing — Embeddings + Vector Store
-import os
-from langchain_openai import OpenAIEmbeddings
-from langchain_community.vectorstores import FAISS
-
-embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
-vector_store = FAISS.from_documents(docs, embeddings)
-retriever = vector_store.as_retriever(search_type="similarity", search_kwargs={"k": 4})
-
-4) Retrieval + Generation (RAG)
-from langchain_core.prompts import PromptTemplate
-from langchain_openai import ChatOpenAI
-
-prompt = PromptTemplate(
-    template=(
-        "You are a helpful assistant.\n"
-        "Answer ONLY from the provided transcript context.\n"
-        "If the context is insufficient, say you don't know.\n\n"
-        "{context}\n"
-        "Question: {question}"
-    ),
-    input_variables=["context", "question"],
-)
-
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.2)
-
-def answer_question(q: str):
-    retrieved = retriever.invoke(q)
-    context = "\n\n".join(d.page_content for d in retrieved)
-    final = prompt.format(context=context, question=q)
-    return llm.invoke(final).content
-
-# Example
-print(answer_question("Is nuclear fusion discussed? What was said?"))
-
-🧪 Example Queries
-
-“Who is Demis Hassabis?”
-
-“Is nuclear fusion discussed? Summarize the points.”
-
-“How is AI used in the conversation?”
-
-🩹 Troubleshooting
-
-AttributeError: YouTubeTranscriptApi has no attribute get_transcript
-Use the fallback shown above (list_transcripts(...).find_transcript(...).fetch()).
-
-No transcript found
-The video may have captions disabled or only auto-generated in other languages. Try another languages list, e.g. ["en", "en-IN"].
-
-OpenAI authentication error
-Ensure .env contains a valid OPENAI_API_KEY and the notebook loaded it via load_dotenv().
-
-🗺️ Roadmap
-
-Add a simple Streamlit/Gradio UI
-
-Support multiple vector DBs (Chroma, Pinecone, etc.)
-
-FastAPI endpoint for production use
-
-📚 References
-
-LangChain Docs – https://python.langchain.com/
-
-youtube-transcript-api – https://github.com/jdepoix/youtube-transcript-api
-
-FAISS – https://faiss.ai/
-
-⚠️ Important Security Note
-
-You accidentally posted an API key in code earlier. Immediately revoke/rotate that key from your OpenAI dashboard and replace it via .env. Never commit secrets to GitHub.
-
-🧩 Quick “How to add this README”
-
-Open your repo → Add file → Create new file
-
-Name it README.md
-
-Paste the content above → Commit
-
-Bas! README tayyar. Agar chaahe to main requirements.txt ka crisp version bhi likh doon:
-
-youtube-transcript-api
-langchain-community
-langchain-openai
-faiss-cpu
-tiktoken
-python-dotenv
-jupyter
-
-
-Kuch aur polish/add karna ho (badges, screenshots, Streamlit UI), bol de bhai—mein laga deta hoon.
-
-
-
-
-
-
+Bas bol dena! 🔥
